@@ -1,0 +1,30 @@
+name: Publish Final Code to Public Repo
+
+on:
+  push:
+    branches:
+      - main # or 'release', or on tag
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout private repo
+        uses: actions/checkout@v3
+
+      - name: Copy final code to temp dir
+        run: |
+          mkdir public-export
+          rsync -av --exclude='.git' ./ public-export/
+
+      - name: Push to public repo
+        run: |
+          cd public-export
+          git init
+          git config user.name "GitHub Action"
+          git config user.email "actions@github.com"
+          git add .
+          git commit -m "Automated release of source code"
+          git branch -M main
+          git remote add origin https://x-access-token:${{ secrets.PUBLIC_REPO_PAT }}@github.com/tombonynge7s/test_public.git
+          git push -f origin main
